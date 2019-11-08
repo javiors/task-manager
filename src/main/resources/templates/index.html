@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hello, Javior</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        .el-header, .el-footer {
+            border: 1px solid #ebebeb;
+            border-radius: 3px;
+            transition: .2s;
+        }
+
+        .el-main {
+            background-color: #E9EEF3;
+            color: #333;
+            text-align: center;
+        }
+
+        body > .el-container {
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+<el-container style="border: 1px solid #eee">
+    <el-header>
+        <span><h3 style="display: inline-block;">Hello Javior!</h3></span>
+        <span style="float: right;margin-top: 10px">
+            <el-button type="success" @click="dialogFormVisible = true" plain>新建项目</el-button>
+        </span>
+
+
+        <el-dialog title="项目信息" :visible.sync="dialogFormVisible">
+            <el-form :model="form">
+                <el-form-item label="项目名称" :label-width="formLabelWidth">
+                    <el-input v-model="form.name" auto-complete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="起止时间" :label-width="formLabelWidth">
+                    <el-date-picker
+                            v-model="form.range"
+                            type="daterange"
+                            value-format="yyyy-MM-dd"
+                            range-separator="至"
+                            start-placeholder="开始日期"
+                            end-placeholder="结束日期">
+                    </el-date-picker>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="dialogFormVisible = false">取 消</el-button>
+                <el-button type="primary" @click="handleOk">确 定</el-button>
+            </div>
+        </el-dialog>
+    </el-header>
+    <el-main>
+        <el-table :data="tableData" style="width: 100%">
+            <el-table-column label="项目">
+                <template slot-scope="scope">
+                    <i class="el-icon-date"></i>
+                    <a href="/tasks/1" style="margin-left: 10px">{{ scope.row.name }}</a>
+                </template>
+            </el-table-column>
+            <el-table-column prop="createdTime" label="创建时间">
+            </el-table-column>
+            <el-table-column label="进度">
+                <template slot-scope="scope">
+                    <el-progress :percentage="scope.row.progress"></el-progress>
+                </template>
+            </el-table-column>
+        </el-table>
+
+        <el-pagination style="margin-top: 10px"
+                layout="prev, pager, next"
+                       :total="total"
+                       :page-size="size"
+                       :page-count="count"
+                       @current-change="handleCurrentChange"
+                :size="15">
+        </el-pagination>
+    </el-main>
+</el-container>
+</div>
+</body>
+<!-- 引入组件库 -->
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        created: function(){
+            var $tableData = this.tableData
+            axios.get('/api/projects', {
+                params: {
+                    page:0,
+                }
+            }).then( (response) => {
+                var result = response.data
+                this.tableData = result.data.result
+                this.total = result.data.count
+            }).catch(function (error) {
+                console.log(error);
+            }).then(function () {
+                // always executed
+            });
+        },
+        data: function() {
+            return {
+                total: 0,
+                size: 15,
+                count: 0,
+                tableData: [],
+                dialogFormVisible: false,
+                form: {
+                    name: '',
+                    range: ['', ''],
+                },
+                formLabelWidth: '120px',
+            }
+        },
+        methods: {
+            handleOk: function() {
+                var params = new URLSearchParams();
+                params.append("name", this.form.name);
+                params.append("start", this.form.range[0]);
+                params.append("end", this.form.range[1]);
+                axios.post('/api/projects/new',
+                    params).then(function (response) {
+                    this.dialogFormVisible = false
+                    location.reload()
+                }).catch(function (error) {
+                        console.log(error);
+                }).then(function () {
+                        // always executed
+                });
+            },
+            handleCurrentChange: function(val) {
+                axios.get('/api/projects', {
+                    params: {
+                        page: val - 1,
+                    }
+                }).then( (response) => {
+                    var result = response.data
+                    this.tableData = result.data.result
+                    this.count = result.data.totalPages
+                }).catch(function (error) {
+                    console.log(error);
+                }).then(function () {
+                    // always executed
+                });
+            }
+        }
+    })
+</script>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+
+    <style>
+        .text {
+            font-size: 14px;
+        }
+
+        .clearfix:before,
+        .clearfix:after {
+            display: table;
+            content: "";
+        }
+        .clearfix:after {
+            clear: both
+        }
+
+        .item {
+            margin: 18px;
+            width: 320px;
+            height: 400px;
+        }
+        .box-card {
+            width: 1200px;
+        }
+        .demo-form-inline{
+            display: inline;
+            float: right
+        }
+        .el-form-item{
+            margin-bottom: 0px;
+        }
+        .el-card__body{
+            display: flex;
+            flex-flow: wrap;
+        }
+
+        .el-row {
+            padding: 20px 10px;
+            width: 100%;
+        }
+        .el-col {
+            border-radius: 4px;
+        }
+        .bg-purple-dark {
+            background: #99a9bf;
+        }
+        .bg-purple {
+            background: #d3dce6;
+        }
+        .bg-purple-light {
+            background: #e5e9f2;
+        }
+        .grid-content {
+            border-radius: 4px;
+            line-height: 36px;
+        }
+        .row-bg {
+            padding: 10px 0;
+            background-color: #f9fafc;
+        }
+        .el-range-editor.el-input__inner{
+            width: 100%;
+        }
+
+    </style>
+</head>
+<body>
+<div id="app">
+    <el-card class="box-card">
+        <div slot="header" class="clearfix">
+            <span>项目名称</span>
+
+            <el-form :inline="true" class="demo-form-inline">
+                <el-form-item label="">
+                    <el-input v-model="task" placeholder="输入卡片内容" style="width: 400px"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="onSubmit">添加任务卡片</el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+        <el-card v-for="(item, i) in taskList" :key="i" class="text item">
+            <el-row>
+                <el-col :span="6"><div class="grid-content">完成度</div></el-col>
+                <el-col :span="18"><div class="grid-content">
+                    <el-slider v-model="item.progress" @change="onChange(item.id, arguments[0])"></el-slider>
+                </div></el-col>
+            </el-row>
+
+            <el-row>
+                <el-col :span="6"><div class="grid-content">描述</div></el-col>
+                <el-col :span="18"><div class="grid-content">
+                    <p style="font-size: 16px;font-weight: lighter">
+                        {{ (i + 1) + '.  ' + item.desc }}
+                    </p>
+                </div></el-col>
+            </el-row>
+
+            <el-row>
+                <el-col :span="24"><div class="grid-content">
+                    <el-date-picker
+                            value-format="yyyy-MM-dd"
+                            v-model="item.range"
+                            size="mini"
+                            type="daterange"
+                            popper-class="minipicker"
+                            range-separator="至"
+                            start-placeholder="开始日期"
+                            @change="onDateChange(item.id, arguments[0])"
+                            end-placeholder="结束日期">
+                    </el-date-picker>
+                </div></el-col>
+            </el-row>
+
+        </el-card>
+    </el-card>
+
+</div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+<script>
+    new Vue({
+        el: '#app',
+        created: function(){
+            axios.get('/api/tasks').then( (response) => {
+                var result = response.data
+                this.taskList = result.data.map(el => {
+                    return {id: el.id, desc: el.desc, progress: el.progress, range: [el.start ? el.start: '', el.end ? el.end: '']}
+                })
+            }).catch(function (error) {
+                console.log(error);
+            }).then(function () {
+                // always executed
+            });
+        },
+        data: function() {
+            return {
+                projectId: [[${projectId}]],
+                taskList: [],
+
+                task: ''
+            }
+        },
+        methods: {
+            onSubmit: function() {
+                var params = new URLSearchParams();
+                params.append("desc", this.task);
+                params.append("projectId", this.projectId);
+                axios.post('/api/tasks/new',
+                    params).then((response) => {
+                        var result = response.data.data
+                        this.taskList.push({
+                            id: result.id,
+                            desc: result.desc,
+                            progress: result.progress,
+                            range: [result.start ? result.start: '', result.end ? result.end: '']
+                        })
+
+                }).catch(function (error) {
+                    console.log(error);
+                }).then(function () {
+                    // always executed
+                });
+            },
+            onChange: function(id, val){
+                var params = new URLSearchParams();
+                params.append("id", id);
+                params.append("progress", val);
+                axios.post('/api/tasks',
+                    params).then((response) => {
+
+                }).catch(function (error) {
+                    console.log(error);
+                }).then(function () {
+                    // always executed
+                });
+            },
+
+            onDateChange: function(id, val){
+                var params = new URLSearchParams();
+                params.append("id", id);
+                params.append("start", val[0]);
+                params.append("end", val[1]);
+                axios.post('/api/tasks',
+                    params).then((response) => {
+
+                }).catch(function (error) {
+                    console.log(error);
+                }).then(function () {
+                    // always executed
+                });
+            }
+        }
+    })
+</script>
+</html>
