@@ -22,8 +22,8 @@ public class TaskController extends BaseController{
     TasksDao tasksDao;
 
     @RequestMapping(value = "tasks", method = RequestMethod.GET)
-    public ApiResponse tasks(){
-        Iterable<Task> tasks = tasksDao.findAll(Sort.by("id").ascending());
+    public ApiResponse tasks(Long projectId){
+        Iterable<Task> tasks = tasksDao.findAllByProjectId(projectId);
         List<Task> taskList = Lists.newArrayList(tasks);
         return success(taskList);
 

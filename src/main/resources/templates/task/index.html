@@ -130,7 +130,7 @@
     new Vue({
         el: '#app',
         created: function(){
-            axios.get('/api/tasks').then( (response) => {
+            axios.get('/api/tasks?projectId=' + [[${projectId}]]).then( (response) => {
                 var result = response.data
                 this.taskList = result.data.map(el => {
                     return {id: el.id, desc: el.desc, progress: el.progress, range: [el.start ? el.start: '', el.end ? el.end: '']}
